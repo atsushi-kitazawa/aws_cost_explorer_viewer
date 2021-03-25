@@ -1,7 +1,9 @@
 # credential1
-- apikey: ******
+- name: ******
+  apikey: ******
   secretkey: ****** 
 
 # credential2
-- apikey: ******
+- name: ******
+  apikey: ******
   secretkey: ******
