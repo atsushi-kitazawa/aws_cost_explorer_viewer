@@ -10,6 +10,7 @@ go install
 ```
 
 If your environments is Linux or Windows, Execute file are also available.
+
 [Release 1.0 · atsushi-kitazawa/aws_cost_explorer_viewer](https://github.com/atsushi-kitazawa/aws_cost_explorer_viewer/releases/tag/1.0)
 
 # usege
