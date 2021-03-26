@@ -15,7 +15,9 @@ import (
 	"golang.org/x/net/context"
 )
 
-var metrics = []string{"BLENDED_COST", "UNBLENDED_COST", "USAGE_QUANTITY"}
+var metrics = []string{"BLENDED_COST", "UNBLENDED_COST"}
+//var metrics = []string{"BLENDED_COST", "UNBLENDED_COST", "USAGE_QUANTITY"}
+//var metrics = []string{"NORMALIZED_USAGE_AMOUNT"}
 var start string
 var end string
 
@@ -62,6 +64,7 @@ func main() {
 				fmt.Println(g.Keys)
 				printMetrics(g.Metrics)
 			}
+			fmt.Println(val.Total)
 		}
 	}
 }
@@ -69,6 +72,7 @@ func main() {
 func getClient(cred setting.Credential) *costexplorer.Client {
 	cfg, err := config.LoadDefaultConfig(context.TODO(),
 		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(cred.Apikey, cred.Secretkey, "")),
+		config.WithRegion("ap-northeast-1"),
 	)
 	if err != nil {
 		log.Fatal(err)
