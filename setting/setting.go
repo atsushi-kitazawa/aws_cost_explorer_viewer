@@ -7,15 +7,29 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+type Regions struct {
+    R []string `yaml:"region"`
+}
+
+type Credentials struct {
+    C []Credential `yaml:"credentials"`
+}
+
 type Credential struct {
     Name string `yaml:"name"`
     Apikey string `yaml:"apikey"`
     Secretkey string `yaml:"secretkey"`
 }
 
-func LoadCredential() []Credential {
-    var c []Credential
+func LoadSettings() (Regions, Credentials) {
+    var r Regions
+    var c Credentials
     buf, err := ioutil.ReadFile("setting.yaml")
+    if err != nil {
+	log.Fatal(err)
+    }
+
+    err = yaml.Unmarshal(buf, &r)
     if err != nil {
 	log.Fatal(err)
     }
@@ -25,5 +39,5 @@ func LoadCredential() []Credential {
 	log.Fatal(err)
     }
 
-    return c
+    return r, c
 }

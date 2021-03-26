@@ -15,64 +15,63 @@ import (
 	"golang.org/x/net/context"
 )
 
-var metrics = []string{"BLENDED_COST", "UNBLENDED_COST"}
-//var metrics = []string{"BLENDED_COST", "UNBLENDED_COST", "USAGE_QUANTITY"}
+//var metrics = []string{"BLENDED_COST", "UNBLENDED_COST"}
+var metrics = []string{"BLENDED_COST", "UNBLENDED_COST", "USAGE_QUANTITY"}
 //var metrics = []string{"NORMALIZED_USAGE_AMOUNT"}
 var start string
 var end string
+
+type costClient struct {
+	region string
+	client *costexplorer.Client
+}
 
 func main() {
 	// parse program arguments
 	start = os.Args[1]
 	end = os.Args[2]
 
-	// load credentials
-	credentials := setting.LoadCredential()
-
-	// get client from credential
-	clients := make([]*costexplorer.Client, 0)
-	names := make([]string, 0)
-	for _, cred := range credentials {
-		clients = append(clients, getClient(cred))
-		names = append(names, cred.Name)
-	}
+	// load settings
+	regions, credentials := setting.LoadSettings()
 
 	// get cost
-	for i, client := range clients {
-		res, err := client.GetCostAndUsage(context.TODO(), &costexplorer.GetCostAndUsageInput{
-			TimePeriod: &types.DateInterval{
-				Start: aws.String(start),
-				End:   aws.String(end),
-			},
-			Granularity: types.GranularityMonthly,
-			Metrics:     metrics,
-			GroupBy: []types.GroupDefinition{
-				types.GroupDefinition{
-					Type: types.GroupDefinitionTypeDimension,
-					Key:  aws.String("SERVICE"),
+	for _, cred := range credentials.C {
+		for _, region := range regions.R {
+			client := getClient(cred, region)
+			res, err := client.GetCostAndUsage(context.TODO(), &costexplorer.GetCostAndUsageInput{
+				TimePeriod: &types.DateInterval{
+					Start: aws.String(start),
+					End:   aws.String(end),
 				},
-			},
-		})
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// print cost
-		fmt.Printf("User: %s\n", names[i])
-		for _, val := range res.ResultsByTime {
-			for _, g := range val.Groups {
-				fmt.Println(g.Keys)
-				printMetrics(g.Metrics)
+				Granularity: types.GranularityMonthly,
+				Metrics:     metrics,
+				GroupBy: []types.GroupDefinition{
+					types.GroupDefinition{
+						Type: types.GroupDefinitionTypeDimension,
+						Key:  aws.String("SERVICE"),
+					},
+				},
+			})
+			if err != nil {
+				log.Fatal(err)
 			}
-			fmt.Println(val.Total)
+
+			// print cost
+			fmt.Printf("[User:Resion]-[%s:%s]\n", cred.Name, region)
+			for _, val := range res.ResultsByTime {
+				for _, g := range val.Groups {
+					fmt.Println(g.Keys)
+					printMetrics(g.Metrics)
+				}
+			}
 		}
 	}
 }
 
-func getClient(cred setting.Credential) *costexplorer.Client {
+func getClient(cred setting.Credential, region string) *costexplorer.Client {
 	cfg, err := config.LoadDefaultConfig(context.TODO(),
 		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(cred.Apikey, cred.Secretkey, "")),
-		config.WithRegion("ap-northeast-1"),
+		config.WithRegion(region),
 	)
 	if err != nil {
 		log.Fatal(err)
