@@ -13,7 +13,7 @@ This tool is written by Go.
 
 If your environments is Linux or Windows, Execute file are also available.
 
-[Release 1.0 · atsushi-kitazawa/aws_cost_explorer_viewer](https://github.com/atsushi-kitazawa/aws_cost_explorer_viewer/releases/tag/1.0)
+[Release 1.1](https://github.com/atsushi-kitazawa/aws_cost_explorer_viewer/releases/tag/1.1)
 
 # usege
 Specify target region, username, apikey and secretkey in setting.yaml.
