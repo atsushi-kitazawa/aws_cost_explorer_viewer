@@ -6,6 +6,7 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	"time"
 
 	"github.com/atsushi-kitazawa/aws_cost_explorer_viewer/setting"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -39,9 +40,16 @@ type metricSummary struct {
 }
 
 func main() {
-	// parse program arguments
-	start = os.Args[1]
-	end = os.Args[2]
+	// set target period 
+	if len(os.Args) == 3 {
+	    start = os.Args[1]
+	    end = os.Args[2]
+	} else {
+	    now := time.Now()
+	    nowyyyyMMdd := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
+	    start = nowyyyyMMdd.Format("2006-01-02")
+	    end = nowyyyyMMdd.AddDate(0, 1, -1).Format("2006-01-02")
+	}
 
 	// load settings
 	regions, credentials := setting.LoadSettings()
