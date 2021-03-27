@@ -3,6 +3,8 @@ This is CLI tool for checking the status of AWS cost.
 
 This tool is written by Go.
 
+![](https://user-images.githubusercontent.com/47269784/112724853-92ef9180-8f58-11eb-9e6d-26acd851a04a.gif)
+
 # install
 ```sh
 % git clone https://github.com/atsushi-kitazawa/aws_cost_explorer_viewer.git
