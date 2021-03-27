@@ -1,13 +1,16 @@
 package main
 
 import (
-	"fmt"
+	"flag"
+	"io/ioutil"
 	"log"
 	"os"
 	"sort"
 	"strconv"
 	"time"
 
+	"github.com/atsushi-kitazawa/aws_cost_explorer_viewer/gui"
+	"github.com/atsushi-kitazawa/aws_cost_explorer_viewer/model"
 	"github.com/atsushi-kitazawa/aws_cost_explorer_viewer/setting"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -25,18 +28,25 @@ var start string
 var end string
 
 // summary metric each user
-var metricSum []metricSummary
+var metricSum []model.MetricSummary
+
+// verbose mode
+var verbose bool
 
 type costClient struct {
 	region string
 	client *costexplorer.Client
 }
 
-type metricSummary struct {
-	user          string
-	blendedCost   float64
-	unBlendedCost float64
-	usageQuantity float64
+func init() {
+	flag.BoolVar(&verbose, "verbose", false, "Print a verbose message")
+	flag.Parse()
+
+	if verbose {
+		log.SetOutput(os.Stderr)
+	} else {
+		log.SetOutput(ioutil.Discard)
+	}
 }
 
 func main() {
@@ -53,16 +63,15 @@ func main() {
 
 	// load settings
 	regions, credentials := setting.LoadSettings()
-	//fmt.Println(len(regions.R))
-	//fmt.Println(len(credentials.C))
-	//return
+	log.Printf("[region] = %v", regions.R)
+	log.Printf("[credential] = %v", credentials.C)
 
 	// summarize metrics by user
-	metricSum = make([]metricSummary, 0)
+	metricSum = make([]model.MetricSummary, 0)
 
 	// get cost
 	for _, cred := range credentials.C {
-		ms := metricSummary{cred.Name, 0, 0, 0}
+		ms := model.MetricSummary{cred.Name, 0, 0, 0}
 		for _, region := range regions.R {
 			client := getClient(cred, region)
 			res, err := client.GetCostAndUsage(context.TODO(), &costexplorer.GetCostAndUsageInput{
@@ -83,23 +92,25 @@ func main() {
 				log.Fatal(err)
 			}
 
-			//fmt.Printf("[User:Resion]-[%s:%s]\n", cred.Name, region)
+			log.Printf("[User:Resion]-[%s:%s]\n", cred.Name, region)
 			for _, val := range res.ResultsByTime {
 				for _, g := range val.Groups {
-					//fmt.Println(g.Keys)
-					//printMetrics(g.Metrics)
+					log.Println(g.Keys)
+					printMetrics(g.Metrics)
 					summarizeMetric(g.Metrics, &ms)
 				}
 			}
 		}
 		metricSum = append(metricSum, ms)
 	}
-	for _, v := range metricSum {
-		fmt.Println(v.user)
-		fmt.Println(v.blendedCost)
-		fmt.Println(v.unBlendedCost)
-		fmt.Println(v.usageQuantity)
-	}
+
+	// display use tview
+	//gui.InitTview()
+	//gui.InitTable()
+	//gui.DisplayMetricSummary(metricSum)
+
+	// display table view
+	gui.DisplayMetricSummaryTableView(metricSum)
 }
 
 func getClient(cred setting.Credential, region string) *costexplorer.Client {
@@ -115,16 +126,16 @@ func getClient(cred setting.Credential, region string) *costexplorer.Client {
 	return client
 }
 
-func summarizeMetric(m map[string]types.MetricValue, s *metricSummary) {
+func summarizeMetric(m map[string]types.MetricValue, s *model.MetricSummary) {
 	for k := range m {
 		amount, _ := strconv.ParseFloat(*m[k].Amount, 64)
 		switch k {
 		case "BlendedCost":
-			s.blendedCost = s.blendedCost + amount
+			s.BlendedCost = s.BlendedCost + amount
 		case "UnblendedCost":
-			s.unBlendedCost = s.unBlendedCost + amount
+			s.UnBlendedCost = s.UnBlendedCost + amount
 		case "UsageQuantity":
-			s.usageQuantity = s.usageQuantity + amount
+			s.UsageQuantity = s.UsageQuantity + amount
 		default:
 		}
 	}
@@ -138,7 +149,7 @@ func printMetrics(m map[string]types.MetricValue) []string {
 	sort.Strings(keys)
 
 	for _, k := range keys {
-		fmt.Printf(" - %s %v %v\n", k, *m[k].Amount, *m[k].Unit)
+		log.Printf(" - %s %v %v\n", k, *m[k].Amount, *m[k].Unit)
 	}
 	return keys
 }
