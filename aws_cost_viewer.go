@@ -27,11 +27,11 @@ var metrics = []string{"BLENDED_COST", "UNBLENDED_COST", "USAGE_QUANTITY"}
 var start string
 var end string
 
-// summary metric each user
-var metricSum []model.MetricSummary
-
 // verbose mode
 var verbose bool
+
+// summary metric each user
+var metricSum []model.MetricSummary
 
 type costClient struct {
 	region string
@@ -40,6 +40,8 @@ type costClient struct {
 
 func init() {
 	flag.BoolVar(&verbose, "verbose", false, "Print a verbose message")
+	flag.StringVar(&start, "start", "", "target start date")
+	flag.StringVar(&end, "end", "", "target end date")
 	flag.Parse()
 
 	if verbose {
@@ -51,15 +53,13 @@ func init() {
 
 func main() {
 	// set target period 
-	if len(os.Args) == 3 {
-	    start = os.Args[1]
-	    end = os.Args[2]
-	} else {
+	if len(start) == 0 || len(end) == 0 {
 	    now := time.Now()
 	    nowyyyyMMdd := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
 	    start = nowyyyyMMdd.Format("2006-01-02")
 	    end = nowyyyyMMdd.AddDate(0, 1, -1).Format("2006-01-02")
 	}
+	log.Printf("start=%s, end=%s", start, end)
 
 	// load settings
 	regions, credentials := setting.LoadSettings()
