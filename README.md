@@ -29,9 +29,9 @@ aws_cost_explorer_viewer   setting.yaml
 ```
 
 # target period
-The target period is the month of execution.
+The target period is the month of this tool execution.
 
 You can specify the target period with command line arguments.
 ```sh
-% ./aws_cost_explorer_viewer 2021-02-01 2021-02-28
+% ./aws_cost_explorer_viewer -start 2021-02-01 -end 2021-03-01
 ```
