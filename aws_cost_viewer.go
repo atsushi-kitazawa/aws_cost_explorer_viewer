@@ -94,6 +94,7 @@ func main() {
 
 			log.Printf("[User:Resion]-[%s:%s]\n", cred.Name, region)
 			for _, val := range res.ResultsByTime {
+				log.Printf("Estimated %v", val.Estimated)
 				for _, g := range val.Groups {
 					log.Println(g.Keys)
 					printMetrics(g.Metrics)
