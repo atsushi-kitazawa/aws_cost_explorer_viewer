@@ -57,7 +57,7 @@ func main() {
 	    now := time.Now()
 	    nowyyyyMMdd := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
 	    start = nowyyyyMMdd.Format("2006-01-02")
-	    end = nowyyyyMMdd.AddDate(0, 1, -1).Format("2006-01-02")
+	    end = nowyyyyMMdd.AddDate(0, 1, 0).Format("2006-01-02")
 	}
 	log.Printf("start=%s, end=%s", start, end)
 
