@@ -39,6 +39,6 @@ credentials:
 
 # metric
 metrics:
-  - BLENDEDCOST
-  - UNBLENDEDCOST
-  - USAGEQUANTITY
+  - BLENDED_COST
+  - UNBLENDED_COST
+  - USAGE_QUANTITY

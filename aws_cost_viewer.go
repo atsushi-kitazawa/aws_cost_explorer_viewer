@@ -20,9 +20,6 @@ import (
 	"golang.org/x/net/context"
 )
 
-// target metrics
-var metrics = []string{"BLENDED_COST", "UNBLENDED_COST", "USAGE_QUANTITY"}
-
 // target priod
 var start string
 var end string
@@ -62,18 +59,19 @@ func doMain() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	regions, credentials, _ := setting.LoadSettings(config)
+	regions, credentials, metrics := setting.LoadSettings(config)
 	log.Printf("[region] = %v", regions.R)
 	log.Printf("[credential] = %v", credentials.C)
+	log.Printf("[metrics] = %v", metrics.M)
 
 	// regionMetricSummary := getRegionMetric(regions, credentials)
 	// gui.DisplayMetricSummaryTableView(*regionMetricSummary)
 
-	serviceMetricSummary := getServiceMetric(credentials)
+	serviceMetricSummary := getServiceMetric(credentials, metrics)
 	gui.DisplayMetricSummaryTableView(*serviceMetricSummary)
 }
 
-func getRegionMetric(regions setting.Regions, credentials setting.Credentials) *[]model.MetricSummary {
+func getRegionMetric(regions setting.Regions, credentials setting.Credentials, metrics setting.Metrics) *[]model.MetricSummary {
 	// summarize metrics by user
 	metricSum := make([]model.MetricSummary, 0)
 	// get cost
@@ -93,7 +91,7 @@ func getRegionMetric(regions setting.Regions, credentials setting.Credentials) *
 					End:   aws.String(end),
 				},
 				Granularity: types.GranularityMonthly,
-				Metrics:     metrics,
+				Metrics:     metrics.M,
 				GroupBy: []types.GroupDefinition{
 					{
 						Key:  aws.String("REGION"),
@@ -120,7 +118,7 @@ func getRegionMetric(regions setting.Regions, credentials setting.Credentials) *
 	return &metricSum
 }
 
-func getServiceMetric(credentials setting.Credentials) *[]model.MetricSummary {
+func getServiceMetric(credentials setting.Credentials, metrics setting.Metrics) *[]model.MetricSummary {
 	// summarize metrics by user
 	metricSum := make([]model.MetricSummary, 0)
 	// get cost
@@ -139,7 +137,7 @@ func getServiceMetric(credentials setting.Credentials) *[]model.MetricSummary {
 				End:   aws.String(end),
 			},
 			Granularity: types.GranularityMonthly,
-			Metrics:     metrics,
+			Metrics:     metrics.M,
 			GroupBy: []types.GroupDefinition{
 				{
 					Key:  aws.String("SERVICE"),
