@@ -30,15 +30,12 @@ var end string
 // verbose mode
 var verbose bool
 
-// summary metric each user
-var metricSum []model.MetricSummary
-
-type costClient struct {
-	region string
-	client *costexplorer.Client
+func main() {
+	parseArg()
+	doMain()
 }
 
-func init() {
+func parseArg() {
 	flag.BoolVar(&verbose, "verbose", false, "Print a verbose message")
 	flag.StringVar(&start, "start", "", "target start date")
 	flag.StringVar(&end, "end", "", "target end date")
@@ -49,29 +46,41 @@ func init() {
 	} else {
 		log.SetOutput(ioutil.Discard)
 	}
-}
 
-func main() {
-	// set target period 
 	if len(start) == 0 || len(end) == 0 {
-	    now := time.Now()
-	    nowyyyyMMdd := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
-	    start = nowyyyyMMdd.Format("2006-01-02")
-	    end = nowyyyyMMdd.AddDate(0, 1, 0).Format("2006-01-02")
+		now := time.Now()
+		nowyyyyMMdd := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
+		start = nowyyyyMMdd.Format("2006-01-02")
+		end = nowyyyyMMdd.AddDate(0, 1, 0).Format("2006-01-02")
 	}
 	log.Printf("start=%s, end=%s", start, end)
+}
 
+func doMain() {
 	// load settings
 	regions, credentials := setting.LoadSettings()
 	log.Printf("[region] = %v", regions.R)
 	log.Printf("[credential] = %v", credentials.C)
 
-	// summarize metrics by user
-	metricSum = make([]model.MetricSummary, 0)
+	// regionMetricSummary := getRegionMetric(regions, credentials)
+	// gui.DisplayMetricSummaryTableView(*regionMetricSummary)
 
+	serviceMetricSummary := getServiceMetric(credentials)
+	gui.DisplayMetricSummaryTableView(*serviceMetricSummary)
+}
+
+func getRegionMetric(regions setting.Regions, credentials setting.Credentials) *[]model.MetricSummary {
+	// summarize metrics by user
+	metricSum := make([]model.MetricSummary, 0)
 	// get cost
 	for _, cred := range credentials.C {
-		ms := model.MetricSummary{cred.Name, 0, 0, 0}
+		ms := model.MetricSummary{
+			User:          cred.Name,
+			BlendedCost:   0,
+			UnBlendedCost: 0,
+			UsageQuantity: 0,
+		}
+
 		for _, region := range regions.R {
 			client := getClient(cred, region)
 			res, err := client.GetCostAndUsage(context.TODO(), &costexplorer.GetCostAndUsageInput{
@@ -82,9 +91,9 @@ func main() {
 				Granularity: types.GranularityMonthly,
 				Metrics:     metrics,
 				GroupBy: []types.GroupDefinition{
-					types.GroupDefinition{
+					{
+						Key:  aws.String("REGION"),
 						Type: types.GroupDefinitionTypeDimension,
-						Key:  aws.String("SERVICE"),
 					},
 				},
 			})
@@ -104,14 +113,51 @@ func main() {
 		}
 		metricSum = append(metricSum, ms)
 	}
+	return &metricSum
+}
 
-	// display use tview
-	//gui.InitTview()
-	//gui.InitTable()
-	//gui.DisplayMetricSummary(metricSum)
+func getServiceMetric(credentials setting.Credentials) *[]model.MetricSummary {
+	// summarize metrics by user
+	metricSum := make([]model.MetricSummary, 0)
+	// get cost
+	for _, cred := range credentials.C {
+		ms := model.MetricSummary{
+			User:          cred.Name,
+			BlendedCost:   0,
+			UnBlendedCost: 0,
+			UsageQuantity: 0,
+		}
 
-	// display table view
-	gui.DisplayMetricSummaryTableView(metricSum)
+		client := getClient(cred, "")
+		res, err := client.GetCostAndUsage(context.TODO(), &costexplorer.GetCostAndUsageInput{
+			TimePeriod: &types.DateInterval{
+				Start: aws.String(start),
+				End:   aws.String(end),
+			},
+			Granularity: types.GranularityMonthly,
+			Metrics:     metrics,
+			GroupBy: []types.GroupDefinition{
+				{
+					Key:  aws.String("SERVICE"),
+					Type: types.GroupDefinitionTypeDimension,
+				},
+			},
+		})
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		for _, val := range res.ResultsByTime {
+			log.Printf("Estimated %v", val.Estimated)
+			for _, g := range val.Groups {
+				log.Println(g.Keys)
+				printMetrics(g.Metrics)
+				summarizeMetric(g.Metrics, &ms)
+			}
+		}
+		metricSum = append(metricSum, ms)
+	}
+	return &metricSum
 }
 
 func getClient(cred setting.Credential, region string) *costexplorer.Client {
