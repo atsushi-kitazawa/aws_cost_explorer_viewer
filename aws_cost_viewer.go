@@ -62,7 +62,7 @@ func doMain() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	regions, credentials := setting.LoadSettings(config)
+	regions, credentials, _ := setting.LoadSettings(config)
 	log.Printf("[region] = %v", regions.R)
 	log.Printf("[credential] = %v", credentials.C)
 

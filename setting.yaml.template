@@ -36,3 +36,9 @@ credentials:
     name: ******
     apikey: ******
     secretkey: ****** 
+
+# metric
+metrics:
+  - BLENDEDCOST
+  - UNBLENDEDCOST
+  - USAGEQUANTITY

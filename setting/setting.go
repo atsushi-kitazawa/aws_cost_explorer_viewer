@@ -20,9 +20,14 @@ type Credential struct {
 	Secretkey string `yaml:"secretkey"`
 }
 
-func LoadSettings(config []byte) (Regions, Credentials) {
+type Metrics struct {
+	M []string `yaml:"metrics"`
+}
+
+func LoadSettings(config []byte) (Regions, Credentials, Metrics) {
 	var r Regions
 	var c Credentials
+	var m Metrics
 
 	err := yaml.Unmarshal(config, &r)
 	if err != nil {
@@ -34,5 +39,10 @@ func LoadSettings(config []byte) (Regions, Credentials) {
 		log.Fatal(err)
 	}
 
-	return r, c
+	err = yaml.Unmarshal(config, &m)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return r, c, m
 }
