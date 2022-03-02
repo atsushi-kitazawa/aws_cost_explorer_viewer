@@ -13,5 +13,6 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
-aws_cost_explorer_viewer
+aws_cost_viewer
+aws_cost_viewer.exe
 setting.yaml
