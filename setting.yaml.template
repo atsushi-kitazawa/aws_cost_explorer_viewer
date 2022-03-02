@@ -37,7 +37,7 @@ credentials:
     apikey: ******
     secretkey: ****** 
 
-# metric
+# metric(support BLENDED_COST, UNBLENDED_COST, USAGE_QUANTITY)
 metrics:
   - BLENDED_COST
   - UNBLENDED_COST

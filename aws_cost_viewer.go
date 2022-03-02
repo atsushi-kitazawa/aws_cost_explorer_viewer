@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/atsushi-kitazawa/aws_cost_explorer_viewer/gui"
 	"github.com/atsushi-kitazawa/aws_cost_explorer_viewer/model"
 	"github.com/atsushi-kitazawa/aws_cost_explorer_viewer/setting"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -65,10 +64,10 @@ func doMain() {
 	log.Printf("[metrics] = %v", metrics.M)
 
 	// regionMetricSummary := getRegionMetric(regions, credentials)
-	// gui.DisplayMetricSummaryTableView(*regionMetricSummary)
+	// model.DisplayMetricSummaryTableView(*regionMetricSummary)
 
 	serviceMetricSummary := getServiceMetric(credentials, metrics)
-	gui.DisplayMetricSummaryTableView(*serviceMetricSummary)
+	model.DisplayMetricSummaryTableView(metrics, *serviceMetricSummary)
 }
 
 func getRegionMetric(regions setting.Regions, credentials setting.Credentials, metrics setting.Metrics) *[]model.MetricSummary {
