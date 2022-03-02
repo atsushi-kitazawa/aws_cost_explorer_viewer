@@ -58,7 +58,11 @@ func parseArg() {
 
 func doMain() {
 	// load settings
-	regions, credentials := setting.LoadSettings()
+	config, err := ioutil.ReadFile("setting.yaml")
+	if err != nil {
+		log.Fatal(err)
+	}
+	regions, credentials := setting.LoadSettings(config)
 	log.Printf("[region] = %v", regions.R)
 	log.Printf("[credential] = %v", credentials.C)
 
